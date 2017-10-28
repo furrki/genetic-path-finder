@@ -124,8 +124,6 @@ class Map:
         return True
 
     def checkMove(self, startingPoint, move):
-
-
         return self.checkPoint(self.resultOfMove(startingPoint ,move))
 
     def checkPath(self, path):
@@ -152,14 +150,14 @@ class Map:
             self.population.append(path)
 
     def crossOver(self, p1, p2):
-        self.coPoint = random.randint(0, self.sizeOfPath-1)
+        self.coPoint = random.randint(1, (self.sizeOfPath-2))
         np1 = list(p1[:self.coPoint]) + list(p2[-(len(p2)-self.coPoint):])
         np2 = list(p2[:self.coPoint]) + list(p1[-(len(p1)-self.coPoint):])
         self.p1 = np1
         self.p2 = np2
         while not (self.checkPath(np1) and self.checkPath(np2)):
 
-            self.coPoint = random.randint(0, self.sizeOfPath-1)
+            self.coPoint = random.randint(1, (self.sizeOfPath-2))
             np1 = list(self.p1[:self.coPoint]) + list(self.p2[-(len(self.p2)-self.coPoint):])
             np2 = list(self.p2[:self.coPoint]) + list(self.p1[-(len(self.p1)-self.coPoint):])
             self.tryMutation()

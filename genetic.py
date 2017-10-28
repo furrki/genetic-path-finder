@@ -3,7 +3,7 @@ import numpy as np
 import math
 import random
 import time
-
+import copy
 def dist(crds1, crds2): # Manhattan
     (x1, y1) = crds1
     (x2, y2) = crds2
@@ -20,7 +20,7 @@ class Map:
     scalar = 20
     mutate_probability = 0.1
     population = []
-
+    barreers = []
 
     def __init__(self):
         self.maxDist = dist((0, 0) , (self.width-1, self.height-1))
@@ -62,6 +62,7 @@ class Map:
             self.x += 1
         elif(move == 4):
             self.y += -1
+
     def showPath(self,path):
         self.reset()
         self.refresh()
@@ -104,9 +105,40 @@ class Map:
         distance = dist((x, y), (self.tx, self.ty))
         return (self.maxDist - distance)/self.maxDist
 
+    def checkPoint(self,(x, y)):
+        if(x < 0 or y < 0 or x > self.width or y > self.height):
+            return False
+        for barreer in self.barreers:
+            if(barreer[0] == x and barreer[1] == y):
+                return False
+        return True
+
+    def checkMove(self, (x,y), move):
+        return self.checkPoint(self.resultOfMove((x,y) ,move))
+
+    def checkPath(self, path):
+        x = copy(self.x)
+        y = copy(self.y)
+
+        for move in path:
+            if(not self.checkMove((x,y),move)):
+                return False
+            x,y = self.resultOfMove((x,y), move)
+
+    def generateRandomArray(self):
+        r = []
+        for i in range(0,self.sizeOfPath):
+            move = random.randint(1,4)
+            r.append(move)
+        return r
+
     def generatePopulation(self):
         for i in range(0,4):
-            self.population.append(np.random.randint(low=1, high=5, size=self.sizeOfPath))
+            path = self.generateRandomArray()
+            while not self.checkPath(path):
+                path = self.generateRandomArray()
+
+            self.population.append(path)
 
     def crossOver(self, p1, p2):
         self.coPoint = random.randint(0, self.sizeOfPath-1)
@@ -160,8 +192,6 @@ class Map:
         self.crossOver(p1, p2)
         self.tryMutation()
 
-
-
     def generatePath(self):
         self.generatePopulation()
         i = 0
@@ -172,6 +202,8 @@ class Map:
             self.showPath(self.best[0])
 
         return self.best[0]
+
+    def addBarreer(self, (x,y)):
 
 map = Map()
 #print(map.fitnessOfPath([3,3,3,3,3]))

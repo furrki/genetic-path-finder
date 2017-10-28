@@ -2,6 +2,7 @@ import cv2
 import numpy as np
 import math
 import random
+import time
 
 def dist(crds1, crds2): # Manhattan
     (x1, y1) = crds1
@@ -9,12 +10,12 @@ def dist(crds1, crds2): # Manhattan
     return abs(y2 - y1) + abs(x2 - x1)
 
 class Map:
-    height = 10
-    width = 10
-    x,y = 5,5
-    sx,sy = x,y
+    height = 15
+    width = 15
+    x,y = 8,8
+    sx,sy = 8,8
     tx,ty = 0,0
-    color_player = (0,200,200)
+    color_player = [0,100,200]
     color_background = (255,255,255)
     scalar = 20
     mutate_probability = 0.1
@@ -26,18 +27,29 @@ class Map:
         self.sizeOfPath = dist((self.x,self.y),(self.tx,self.ty))
         self.coPoint = random.randint(0, self.sizeOfPath-1)
         self.best = [[], 0]
+        self.reset()
+
+    def reset(self):
+        self.color_player[0] = (self.color_player[0] + 10) % 255
+
+        self.x, self.y = self.sx, self.sy
         self.scene =  np.zeros((self.height*self.scalar,self.width*self.scalar,3), np.uint8)
 
         for i in range(0, self.width):
             for j in range(0, self.height):
                 cv2.rectangle(self.scene,(int(self.scalar/2)+i*self.scalar,int(self.scalar/2)+j*self.scalar), (int(self.scalar/2)+i*self.scalar,int(self.scalar/2)+j*self.scalar), self.color_background, int(self.scalar/2))
-    def refresh(self):
-
-        cv2.circle(self.scene,(int(self.scalar/2) + self.x*self.scalar, int(self.scalar/2) + self.y*self.scalar), int(self.scalar/2), self.color_player, -1)
         cv2.rectangle(self.scene,(int(self.scalar/2) + self.tx*self.scalar, int(self.scalar/2) + self.ty*self.scalar),(int(self.scalar/2) + self.tx*self.scalar, int(self.scalar/2) + self.ty*self.scalar),(0,255,0),int(self.scalar/2))
         cv2.rectangle(self.scene,(int(self.scalar/2) + self.sx*self.scalar, int(self.scalar/2) + self.sy*self.scalar),(int(self.scalar/2) + self.sx*self.scalar, int(self.scalar/2) + self.sy*self.scalar),(0,0,255),int(self.scalar/2))
+
+    def refresh(self):
+        cv2.circle(self.scene,(int(self.scalar/2) + self.x*self.scalar, int(self.scalar/2) + self.y*self.scalar), int(self.scalar/2), self.color_player, -1)
         cv2.imshow("scene",self.scene)
-        cv2.waitKey(0)
+        if(self.best[1] == 1.0):
+            time.sleep(.3)
+
+        time.sleep(.01)
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            print("asd")
 
     def doMove(self, move):
         # 1-Left 2-Top 3-Right 4- Bottom
@@ -50,6 +62,12 @@ class Map:
             self.x += 1
         elif(move == 4):
             self.y += -1
+    def showPath(self,path):
+        self.reset()
+        self.refresh()
+        for move in path:
+            self.doMove(move)
+            self.refresh()
 
     def doPath(self, path):
         self.refresh()
@@ -72,12 +90,14 @@ class Map:
         return (x, y)
 
     def resultOfPath(self,path):
+        self.reset()
         (x, y) = (self.x, self.y)
         for move in path:
             (x,y) = self.resultOfMove((x,y), move)
         return (x,y)
 
     def fitnessOfPath(self, path):
+        self.reset()
         (x, y) = (self.x, self.y)
         for move in path:
             (x,y) = self.resultOfMove((x,y), move)
@@ -105,7 +125,7 @@ class Map:
         for path in self.p1:
             if(random.random() < self.mutate_probability):
                 happen = True
-                self.p1[i] = random.randint(0, 4)
+                self.p1[i] = random.randint(1, 4)
             i += 1
 
         if(happen):
@@ -116,7 +136,7 @@ class Map:
         for path in self.p2:
             if(random.random() < self.mutate_probability):
                 happen = True
-                self.p2[i] = random.randint(0, 4)
+                self.p2[i] = random.randint(1, 4)
             i += 1
 
         if(happen):
@@ -149,6 +169,8 @@ class Map:
             self.eliminate()
             print(str(i) + ": " + str(self.best[1]))
             i += 1
+            self.showPath(self.best[0])
+
         return self.best[0]
 
 map = Map()
@@ -156,5 +178,5 @@ map = Map()
 path = map.generatePath()
 print(map.resultOfPath(map.best[0]))
 print(map.best[0])
-map.doPath(path)
+cv2.waitKey(0)
 cv2.destroyAllWindows()

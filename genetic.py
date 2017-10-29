@@ -19,13 +19,13 @@ class Map:
     color_background = (255,255,255)
     color_barreer = (30,30,30)
     scalar = 20
-    mutate_probability = 0.5
+    mutate_probability = 0.3
     population = []
     barreers = []
     eta = 0
     def __init__(self):
         self.maxDist = dist((0, 0) , (self.width-1, self.height-1))
-        self.sizeOfPath = 2*dist((self.x,self.y),(self.tx,self.ty)) -1
+        self.sizeOfPath = 2*dist((self.x,self.y),(self.tx,self.ty))
 
         self.coPoint = random.randint(0, self.sizeOfPath-1)
         self.best = [[], 0]
@@ -124,6 +124,8 @@ class Map:
         return True
 
     def checkMove(self, startingPoint, move):
+
+
         return self.checkPoint(self.resultOfMove(startingPoint ,move))
 
     def checkPath(self, path):
@@ -150,14 +152,14 @@ class Map:
             self.population.append(path)
 
     def crossOver(self, p1, p2):
-        self.coPoint = random.randint(1, (self.sizeOfPath-2))
+        self.coPoint = random.randint(0, self.sizeOfPath-1)
         np1 = list(p1[:self.coPoint]) + list(p2[-(len(p2)-self.coPoint):])
         np2 = list(p2[:self.coPoint]) + list(p1[-(len(p1)-self.coPoint):])
         self.p1 = np1
         self.p2 = np2
         while not (self.checkPath(np1) and self.checkPath(np2)):
 
-            self.coPoint = random.randint(1, (self.sizeOfPath-2))
+            self.coPoint = random.randint(0, self.sizeOfPath-1)
             np1 = list(self.p1[:self.coPoint]) + list(self.p2[-(len(self.p2)-self.coPoint):])
             np2 = list(self.p2[:self.coPoint]) + list(self.p1[-(len(self.p1)-self.coPoint):])
             self.tryMutation()
@@ -177,8 +179,16 @@ class Map:
                 happen = True
                 tmpp1[i] = random.randint(1, 4)
             i += 1
+        while not self.checkPath(tmpp1):
 
-        if(happen and self.checkPath(tmpp1)):
+            i = 0
+            happen = False
+            for path in tmpp1:
+                if(random.random() < self.mutate_probability):
+                    happen = True
+                    tmpp1[i] = random.randint(1, 4)
+                i += 1
+        if(happen  ):
             self.p1 = tmpp1
             self.population.append(tmpp1)
 
@@ -190,7 +200,16 @@ class Map:
                 tmpp2[i] = random.randint(1, 4)
             i += 1
 
-        if(happen and self.checkPath(tmpp2)):
+        while not self.checkPath(tmpp2):
+
+            i = 0
+            happen = False
+            for path in tmpp2:
+                if(random.random() < self.mutate_probability):
+                    happen = True
+                    tmpp2[i] = random.randint(1, 4)
+                i += 1
+        if(happen):
             self.p2 = tmpp2
             self.population.append(tmpp2)
 
@@ -240,11 +259,7 @@ mmap = Map()
 mmap.addBarreer(1,1)
 mmap.addBarreer(1,2)
 mmap.addBarreer(1,3)
-mmap.addBarreer(1,4)
-mmap.addBarreer(2,2)
-mmap.addBarreer(2,1)
-mmap.addBarreer(3,3)
-mmap.addBarreer(3,1)
+
 mmap.addBarreer(3,2)
 mmap.addBarreer(4,4)
 path = mmap.generatePath()
